@@ -1,3 +1,3 @@
 # M3-2025-Challenge
-hello this is nathan testing pushing from terminal
+Our snazzy code for the 2025 M3 Challenge
 
