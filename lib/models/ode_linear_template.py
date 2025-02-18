@@ -15,7 +15,7 @@ y0 = 5
 t = np.linspace(0, 20, 100)
 
 # Solve ODE
-y = odeint(model, y0, t)
+y = odeint(dydt, y0, t)
 
 # Plot results
 plt.plot(t, y)
