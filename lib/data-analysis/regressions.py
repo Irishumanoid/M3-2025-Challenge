@@ -1,6 +1,7 @@
 import numpy as np
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.kernel_ridge import KernelRidge
@@ -8,6 +9,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.special import expit
 
 # works for 1+ inputs
 def linear_regression(input: np.ndarray, output: np.array):
@@ -33,6 +35,12 @@ def polynomial_regression(degree: int, input: np.ndarray, output: np.ndarray, nu
         print('residuals: ' + str([r for r in all_residuals]))
         print(f'r_squared: {round(model.score(test_x_ , test_y), 3)}, b0: {model.intercept_}, coefficients: {model.coef_}')
     return model
+
+def logistic_regression(input: np.ndarray, output: np.ndarray):
+    model = LogisticRegression(max_iter=200).fit(input, output)
+    print(f'r_squared: {round(model.score(input , output), 3)}, b0: {model.intercept_}, coefficients: {model.coef_}')
+    return model
+
     
 #good for nonlinear data, prevents overfitting, and useful when inputs have high autocorrelation/trend redundancy
 def kernel_ridge_regression(input: np.ndarray, output: np.ndarray, alpha=1.0, gamma=0.1):
@@ -93,3 +101,20 @@ model = polynomial_regression(degree=2, input=x, output=df['temp_max'])
 df['predicted'] = model.predict(PolynomialFeatures(degree=2).fit_transform(x))
 sns.heatmap(df.corr(), annot = True, cmap = 'coolwarm')
 plt.show()
+
+
+# Code for testing logistic regression model with binary states
+# c = np.array([0, 1, 2, 3, 4]).reshape((-1, 1))
+
+# d = np.array([0, 0, 1, 1, 1])
+# model = logistic_regression(c, d)
+
+# plt.figure(1, figsize=(4, 3))
+# plt.clf()
+# plt.scatter(c.ravel(), d, label="example data", color="black", zorder=20)
+# X_test = np.linspace(-5, 10, 300)
+
+# loss = expit(X_test * model.coef_ + model.intercept_).ravel()
+# plt.plot(X_test, loss, label="Logistic Regression Model", color="red", linewidth=3)
+
+# plt.show()
