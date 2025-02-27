@@ -1,3 +1,5 @@
 /.hypothesis
 .DS_Store
 https:/
+../../.vscode/
+pomegranate/
