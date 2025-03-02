@@ -99,22 +99,8 @@ plt.tight_layout()'''
 x = [[precip, wind] for precip, wind in zip(df['precipitation'], df['wind'])]
 model = polynomial_regression(degree=2, input=x, output=df['temp_max'])
 df['predicted'] = model.predict(PolynomialFeatures(degree=2).fit_transform(x))
+print(df.columns)
+df.drop(['date', 'weather'], axis=1, inplace=True)
+print(df.columns)
 sns.heatmap(df.corr(), annot = True, cmap = 'coolwarm')
 plt.show()
-
-
-# Code for testing logistic regression model with binary states
-# c = np.array([0, 1, 2, 3, 4]).reshape((-1, 1))
-
-# d = np.array([0, 0, 1, 1, 1])
-# model = logistic_regression(c, d)
-
-# plt.figure(1, figsize=(4, 3))
-# plt.clf()
-# plt.scatter(c.ravel(), d, label="example data", color="black", zorder=20)
-# X_test = np.linspace(-5, 10, 300)
-
-# loss = expit(X_test * model.coef_ + model.intercept_).ravel()
-# plt.plot(X_test, loss, label="Logistic Regression Model", color="red", linewidth=3)
-
-# plt.show()
