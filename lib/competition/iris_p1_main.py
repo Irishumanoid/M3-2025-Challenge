@@ -26,7 +26,7 @@ init_temp = df.iloc[0]['Temperature (°F)']
 
 
 for i in range(len(A)):
-    for row in range(len(df)):
+    for row in range(1, len(df)):
         humidity = df.iloc[row]['Humidity (%)'] / 100
         k_new = (1 - humidity) * k_vals[i] + humidity * k_water_vapor
 
@@ -46,6 +46,7 @@ with open('house_type_temps_over_24h.json', 'w') as file:
     json.dump(house_type_temps, file, indent=4)
 
 fig, axes = plt.subplots(nrows=2, ncols=2)
+df = df.iloc[1:, :]
 x = [i for i in range(len(df))]
 axes[0, 0].plot(x, house_data[0])
 axes[0, 0].plot(x, df['Temperature (°F)'])

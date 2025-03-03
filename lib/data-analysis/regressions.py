@@ -13,7 +13,7 @@ from scipy.special import expit
 
 # works for 1+ inputs
 def linear_regression(input: np.ndarray, output: np.array):
-    input = input.reshape((-1, len(input[0])))
+    #input = input.reshape((-1, len(input[0])))
     model = LinearRegression().fit(input, output)
     print(f'r_squared: {round(model.score(input, output), 3)}, b0: {model.intercept_}, b1: {model.coef_[0]}')
     return model
@@ -69,38 +69,68 @@ def k_nearest_neighbors(input: np.ndarray, output: np.ndarray, k=2):
     plt.legend()
     plt.show()
 
+# inputs are time, temp, and population, output is electricity consumption
+temp_df = pd.read_csv('./good_data/range_temp_data.csv')
+pop_df = pd.read_csv('./good_data/memphis_pop.csv')
+electricity_df = pd.read_csv('./good_data/tn_electricity.csv')
 
-x = [
-  [0, 1], [5, 1], [15, 2], [25, 5], [35, 11], [45, 15], [55, 34], [60, 35], [70, 40]
-]
-y = [4, 5, 20, 14, 32, 22, 38, 43, 49]
-x, y = np.array(x), np.array(y)
+inputs = [[temp, pop] for temp, pop in zip(temp_df['Year Avg'], pop_df['Population'])]
+output = electricity_df['Total Sales MwH']
 
-a = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
-b = np.array([15, 11, 2, 8, 25, 32])
+model = linear_regression(inputs, output)
 
-'''model = polynomial_regression(2, a, b)
-pred_out = model.predict(PolynomialFeatures(degree=2).fit_transform(a))
-x = np.linspace(min(a), max(a), 400)
-plt.scatter(a, b, color='b')
-plt.plot(x, model.coef_[2] * x**2 + model.coef_[1] * x + model.intercept_, color='k')
+temp, pop = zip(*inputs) 
+
+inputs_ = np.array(inputs)
+pred_out = model.predict(inputs_)
+
+'''
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(temp, pop, output, color='blue', label='Actual', s=30)
+ax.plot_trisurf(temp, pop, pred_out, color='green', alpha=0.5, label='Predicted')
+
+ax.set_xlabel('Temperature')
+ax.set_ylabel('Population')
+ax.set_zlabel('Electricity Consumption')
+ax.set_title('Multilinear Regression: Actual vs Predicted')
+
+plt.legend()
+#plt.show()
+
+
+combined_df = pd.concat([temp_df, pop_df, electricity_df], axis=1)
+combined_df.drop(['STATE'], axis=1, inplace=True)
+sns.heatmap(combined_df.corr(), annot = False, cmap = 'coolwarm')
 plt.show()'''
 
-df = pd.read_csv('seattle_weather.csv')
-print(df.describe())
-'''fig, axs = plt.subplots(4, figsize = (5,5))
-plt1 = sns.boxplot(df['precipitation'], ax = axs[0])
-plt2 = sns.boxplot(df['temp_max'], ax = axs[1])
-plt2 = sns.boxplot(df['temp_min'], ax = axs[2])
-plt2 = sns.boxplot(df['wind'], ax = axs[3])
-plt.tight_layout()'''
 
-# example of finding and appending to df the regression between multiple variables and one output variable
-x = [[precip, wind] for precip, wind in zip(df['precipitation'], df['wind'])]
-model = polynomial_regression(degree=2, input=x, output=df['temp_max'])
-df['predicted'] = model.predict(PolynomialFeatures(degree=2).fit_transform(x))
-print(df.columns)
-df.drop(['date', 'weather'], axis=1, inplace=True)
-print(df.columns)
-sns.heatmap(df.corr(), annot = True, cmap = 'coolwarm')
+last_year = temp_df['Year'].max()
+future_years = np.array([last_year + i for i in range(1, 23)]).reshape(-1, 1)
+
+temp_model = polynomial_regression(2, temp_df[['Year']], temp_df['Year Avg']) 
+pop_model = logistic_regression(pop_df[['Year']].to_numpy(), pop_df['Population'].to_numpy())
+
+poly = PolynomialFeatures(degree=2)
+future_temps = temp_model.predict(poly.fit_transform(future_years))
+print('temps: '+ str(future_temps))
+future_pops = pop_model.predict(future_years)
+future_pops = [int(round(p, 0)) for p in future_pops]
+print('pops: '+ str(future_pops))
+
+future_inputs = [[t, p] for t, p in zip(future_temps, future_pops)]
+
+future_predictions = model.predict(future_inputs)
+print(future_predictions)
+
+first_year = temp_df['Year'].min()
+print(f'first year {first_year}')
+
+all_years = np.array([first_year + i for i in range((last_year - first_year + 1) + len(future_inputs))])
+all_electricity_usages = np.concatenate((output.to_numpy(), future_predictions))
+
+plt.plot(all_years, all_electricity_usages)
+plt.scatter([first_year + i for i in range(last_year - first_year + 1)], output)
 plt.show()
+
+#in 2045: 110,925,232 kW/h

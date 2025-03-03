@@ -16,8 +16,10 @@ def filter_csv(file, col_name, condition: Callable[[T], bool]):
 
 
 # example (finds names with letter a in them)
-func = lambda name: "a" in name
+func = lambda col: "TN" in col
+yearFunc = lambda year: year >= 2010 and year <= 2023
 
-with open('./test.csv', 'r') as f:
-    df = filter_csv(f, 'name', func)
+with open('./temp_data.csv', 'r') as f:
+    df = filter_csv(f, 'Year', yearFunc)
     print('df length is: ' + str(len(df)))
+    df.to_csv('./range_temp_data.csv')

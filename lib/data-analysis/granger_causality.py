@@ -18,7 +18,7 @@ weather_df.set_index('date', inplace=True)
 
 # plot initial data
 def init_data_plot():
-    fig,ax = plt.subplots(4, figsize=(15,8), sharex=True)
+    fig, ax = plt.subplots(4, figsize=(15,8), sharex=True)
     plot_cols = ['precipitation', 'temp_max', 'temp_min', 'wind']
     weather_df[plot_cols].plot(subplots=True, legend=False, ax=ax)
     for a in range(len(ax)): 
