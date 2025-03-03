@@ -1,0 +1,12 @@
+```{r import}
+df = read.csv("./lib/competition/ZipCodePopAgeBreakdown.csv")
+print(colnames(df))
+```
+
+```{r calculated_fields}
+df$total_population <- df$Under.5 + df$X.5...9 + df$X.10...14 + df$X15.19 + df$X20.24 + df$X25.29 + df$X30.34 + df$X35.39 + df$X40.44 + df$X45.49 + df$X50.54 + df$X55.59 + df$X60.64 + df$X65.69 + df$X70.74 + df$X75.79 + df$X80.84 + df$X85.Plus
+df$proportion_between_65_80 <- (df$X65.69 + df$X70.74 + df$X75.79)/df$total_population
+df$proportion_over_80 <- (df$X80.84 + df$X85.Plus)/df$total_population
+df$proportion_under_14 <- (df$Under.5 + df$X.5...9 + df$X.10...14)/df$total_population
+df$proportion_working_age <- (df$X15.19 + df$X20.24 + df$X25.29 + df$X30.34 + df$X35.39 + df$X40.44 + df$X45.49 + df$X50.54 + df$X55.59 + df$X60.64)/df$total_population
+```

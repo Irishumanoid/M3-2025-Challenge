@@ -1,0 +1,34 @@
+```{r import}
+print(getwd())
+#df = read.csv("./lib/competition/MemphisPopulation.csv")
+population = read.csv("./lib/competition/MemphisPopulation.csv")
+travel = read.csv("./lib/competition/MemphisTravel.csv")
+dwellings = read.csv("./lib/competition/MemphisDwellings.csv")
+
+#Merge the data by the common row field
+df = merge(population, travel, by = "ZIP.code")
+
+#Print all column names 
+print(colnames(df))
+```
+
+```
+
+```{r calculated_fields}
+
+#Make a calculated field household_pop_density that is the ratio of population
+#to households:
+df$household_pop_density <- df$Population / df$Number.of.households
+
+#proportion of vehicles per household (will assume all people can fit into the vehicle)
+df$proportion_vehicle <- df$Households.with.1..vehicles.x / df$Number.of.households
+
+#proportion of those who work (over age 16 and work)
+df$proportion_work <- df$Population.age.16..years.old.who.work / df$Population
+
+#proportion of those who work from home if they work
+df$proportion_wfh <- df$Primary.mode.of.transportation.to.work..persons.aged.16.years....other.and.work.from.home / df$Population.age.16..years.old.who.work
+
+
+```
+
