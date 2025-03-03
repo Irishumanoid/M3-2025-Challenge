@@ -9,7 +9,6 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.special import expit
 
 # works for 1+ inputs
 def linear_regression(input: np.ndarray, output: np.array):
@@ -72,18 +71,18 @@ def k_nearest_neighbors(input: np.ndarray, output: np.ndarray, k=2):
 # inputs are time, temp, and population, output is electricity consumption
 temp_df = pd.read_csv('./good_data/range_temp_data.csv')
 pop_df = pd.read_csv('./good_data/memphis_pop.csv')
+gdp_df = pd.read_csv('./good_data/gdp.csv')
 electricity_df = pd.read_csv('./good_data/tn_electricity.csv')
 
-inputs = [[temp, pop] for temp, pop in zip(temp_df['Year Avg'], pop_df['Population'])]
+inputs = [[temp, pop, gdp] for temp, pop, gdp in zip(temp_df['Year Avg'], pop_df['Population'], gdp_df['GDP'])]
 output = electricity_df['Total Sales MwH']
 
 model = linear_regression(inputs, output)
 
-temp, pop = zip(*inputs) 
+temp, pop, gdp = zip(*inputs) 
 
 inputs_ = np.array(inputs)
 pred_out = model.predict(inputs_)
-
 
 fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
@@ -99,38 +98,38 @@ plt.legend()
 plt.show()
 
 
-combined_df = pd.concat([temp_df, pop_df, electricity_df], axis=1)
+combined_df = pd.concat([temp_df, pop_df, electricity_df, gdp_df], axis=1)
 combined_df.drop(['STATE'], axis=1, inplace=True)
 sns.heatmap(combined_df.corr(), annot = True, annot_kws={"fontsize":3}, cmap = 'coolwarm', xticklabels=True, yticklabels=True)
 plt.show()
 
 
-# last_year = temp_df['Year'].max()
-# future_years = np.array([last_year + i for i in range(1, 23)]).reshape(-1, 1)
+'''
+first_year = temp_df['Year'].min()
+last_year = temp_df['Year'].max()
+future_years = np.array([last_year + i for i in range(last_year - first_year)]).reshape(-1, 1)
 
-# temp_model = polynomial_regression(2, temp_df[['Year']], temp_df['Year Avg']) 
-# pop_model = logistic_regression(pop_df[['Year']].to_numpy(), pop_df['Population'].to_numpy())
+temp_model = polynomial_regression(2, temp_df[['Year']], temp_df['Year Avg']) 
+pop_model = logistic_regression(pop_df[['Year']].to_numpy(), pop_df['Population'].to_numpy())
+gdp_model = linear_regression(gdp_df[['Year']], gdp_df['GDP'])
 
-# poly = PolynomialFeatures(degree=2)
-# future_temps = temp_model.predict(poly.fit_transform(future_years))
-# print('temps: '+ str(future_temps))
-# future_pops = pop_model.predict(future_years)
-# future_pops = [int(round(p, 0)) for p in future_pops]
-# print('pops: '+ str(future_pops))
+poly = PolynomialFeatures(degree=2)
+future_temps = temp_model.predict(poly.fit_transform(future_years))
+print('temps: '+ str(future_temps))
+future_pops = pop_model.predict(future_years)
+future_pops = [int(round(p, 0)) for p in future_pops]
+print('pops: '+ str(future_pops))
+future_gdps = gdp_model.predict(future_years)
 
-# future_inputs = [[t, p] for t, p in zip(future_temps, future_pops)]
+future_inputs = [[t, p, g] for t, p, g in zip(future_temps, future_pops, future_gdps)]
 
-# future_predictions = model.predict(future_inputs)
-# print(future_predictions)
+future_predictions = model.predict(future_inputs)
+print(future_predictions)
 
-# first_year = temp_df['Year'].min()
-# print(f'first year {first_year}')
+print('last year pred: ' + str(output[len(output) - 1]))
+print('2045 pred: ' + str(future_predictions[-1]))
 
-# all_years = np.array([first_year + i for i in range((last_year - first_year + 1) + len(future_inputs))])
-# all_electricity_usages = np.concatenate((output.to_numpy(), future_predictions))
-
-# plt.plot(all_years, all_electricity_usages)
-# plt.scatter([first_year + i for i in range(last_year - first_year + 1)], output)
-# plt.show()
-
-#in 2045: 110,925,232 kW/h
+plt.plot(future_years, future_predictions)
+plt.scatter([first_year + i for i in range(last_year - first_year + 1)], output)
+plt.show()
+'''
