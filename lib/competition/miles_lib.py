@@ -8,6 +8,8 @@ house_type_temps_over_24h = None
 with open('house_type_temps_over_24h.json', 'r') as file:
     house_type_temps_over_24h = json.load(file)
     
+corresponding_age_ranges = [[0,5], [5,10], [10,15], [15,20], [20,25], [25,30], [30,35], [35,40], [40,45], [45,50], [50,55], [55,60], [60,65], [65,70], [70,75], [75,80], [80,85], [85,200]]
+    
 #This data was exported by R
 heatwave_data = pd.read_csv('heatwave_b.csv')
 
@@ -104,10 +106,9 @@ def heat_danger_continuous(heat_index):
         return -1
  
  
-def demographic_restorative_coefficient(median_household_income, percent_nonwhite):
+def demographic_restorative_coefficient(median_household_income):
     inc_part = 20_000 / min(median_household_income, 20_000)
-    race_part = 1 - percent_nonwhite
-    return inc_part + race_part
+    return inc_part 
 
 #TODO: Get full population demographic instead of household count?
 def age_risk(percent_household_over_65, percent_household_under_18):
@@ -141,10 +142,15 @@ def age_risk(age_category): #How tf do I normalize this??? don't I do proportion
     else:
         return 0.1
 
-def sample_is_working(age_category):
-    to_string_indices <- c('Under.5', 'X.5...9', 'X.10...14', 'X15.19', 'X20.24', 'X25.29', 'X30.34', 'X35.39', 'X40.44', 'X45.49', 'X50.54', 'X55.59', 'X60.64', 'X65.69', 'X70.74', 'X75.79', 'X80.84', 'X85.Plus')
+def sample_working_status(age_cat_working_probability):
+    #to_string_indices = ['Under.5', 'X.5...9', 'X.10...14', 'X15.19', 'X20.24', 'X25.29', 'X30.34', 'X35.39', 'X40.44', 'X45.49', 'X50.54', 'X55.59', 'X60.64', 'X65.69', 'X70.74', 'X75.79', 'X80.84', 'X85.Plus']
+    #i = corresponding_age_ranges.index(age_category)
     
-    pass
+    val = random()
+    if val < age_cat_working_probability:
+        return True
+    else:
+        return False
     
 
 def sample_commute_type(wfh_pct, public_pct, car_pct = None):
@@ -191,13 +197,13 @@ def temp_mask_by_commute_type(commute_type):
 
 def shade_temp_amount(house_type):
     if house_type == "house1":
-        return 
+        return 10
     elif house_type == "house2":
-        return 
+        return 5
     elif house_type == "house3":
-        return 
+        return 0
     elif house_type == "house4":
-        return 
+        return 0
     
 def inside_temp_data(house_type):
     return house_type_temps_over_24h[house_type]
@@ -223,9 +229,9 @@ def sample_family_size(house_type):
     pass
 
     
-def integral_of_HOV(hov_over_time):
-    timescount = len(hov_over_time) #Supposed to be 24
-    return sum([hov_over_time for i in range(timescount)]) / timescount
+def integral_of_PHOV(heat_danger_over_time):
+    timescount = len(heat_danger_over_time) #Supposed to be 24
+    return sum([heat_danger_over_time[i] for i in range(timescount)]) / timescount
 
 
    
