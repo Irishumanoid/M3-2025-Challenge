@@ -84,7 +84,7 @@ temp, pop = zip(*inputs)
 inputs_ = np.array(inputs)
 pred_out = model.predict(inputs_)
 
-'''
+
 fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(temp, pop, output, color='blue', label='Actual', s=30)
@@ -96,41 +96,41 @@ ax.set_zlabel('Electricity Consumption')
 ax.set_title('Multilinear Regression: Actual vs Predicted')
 
 plt.legend()
-#plt.show()
+plt.show()
 
 
 combined_df = pd.concat([temp_df, pop_df, electricity_df], axis=1)
 combined_df.drop(['STATE'], axis=1, inplace=True)
-sns.heatmap(combined_df.corr(), annot = False, cmap = 'coolwarm')
-plt.show()'''
-
-
-last_year = temp_df['Year'].max()
-future_years = np.array([last_year + i for i in range(1, 23)]).reshape(-1, 1)
-
-temp_model = polynomial_regression(2, temp_df[['Year']], temp_df['Year Avg']) 
-pop_model = logistic_regression(pop_df[['Year']].to_numpy(), pop_df['Population'].to_numpy())
-
-poly = PolynomialFeatures(degree=2)
-future_temps = temp_model.predict(poly.fit_transform(future_years))
-print('temps: '+ str(future_temps))
-future_pops = pop_model.predict(future_years)
-future_pops = [int(round(p, 0)) for p in future_pops]
-print('pops: '+ str(future_pops))
-
-future_inputs = [[t, p] for t, p in zip(future_temps, future_pops)]
-
-future_predictions = model.predict(future_inputs)
-print(future_predictions)
-
-first_year = temp_df['Year'].min()
-print(f'first year {first_year}')
-
-all_years = np.array([first_year + i for i in range((last_year - first_year + 1) + len(future_inputs))])
-all_electricity_usages = np.concatenate((output.to_numpy(), future_predictions))
-
-plt.plot(all_years, all_electricity_usages)
-plt.scatter([first_year + i for i in range(last_year - first_year + 1)], output)
+sns.heatmap(combined_df.corr(), annot = True, annot_kws={"fontsize":3}, cmap = 'coolwarm', xticklabels=True, yticklabels=True)
 plt.show()
+
+
+# last_year = temp_df['Year'].max()
+# future_years = np.array([last_year + i for i in range(1, 23)]).reshape(-1, 1)
+
+# temp_model = polynomial_regression(2, temp_df[['Year']], temp_df['Year Avg']) 
+# pop_model = logistic_regression(pop_df[['Year']].to_numpy(), pop_df['Population'].to_numpy())
+
+# poly = PolynomialFeatures(degree=2)
+# future_temps = temp_model.predict(poly.fit_transform(future_years))
+# print('temps: '+ str(future_temps))
+# future_pops = pop_model.predict(future_years)
+# future_pops = [int(round(p, 0)) for p in future_pops]
+# print('pops: '+ str(future_pops))
+
+# future_inputs = [[t, p] for t, p in zip(future_temps, future_pops)]
+
+# future_predictions = model.predict(future_inputs)
+# print(future_predictions)
+
+# first_year = temp_df['Year'].min()
+# print(f'first year {first_year}')
+
+# all_years = np.array([first_year + i for i in range((last_year - first_year + 1) + len(future_inputs))])
+# all_electricity_usages = np.concatenate((output.to_numpy(), future_predictions))
+
+# plt.plot(all_years, all_electricity_usages)
+# plt.scatter([first_year + i for i in range(last_year - first_year + 1)], output)
+# plt.show()
 
 #in 2045: 110,925,232 kW/h
