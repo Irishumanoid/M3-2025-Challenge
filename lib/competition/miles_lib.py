@@ -1,13 +1,62 @@
 from random import *
-seed = 0
+import json
+import pandas as pd
+import os
+
+house_type_temps_over_24h = None
+
+with open('house_type_temps_over_24h.json', 'r') as file:
+    house_type_temps_over_24h = json.load(file)
+    
+#This data was exported by R
+heatwave_data = pd.read_csv('heatwave_b.csv')
+
+#Get outside temperature per hour
+temp_outside = heatwave_data['Temperature (°F)']
 
 neg_inf = float('-inf')
 pos_inf = float('inf')
 
-#Copilot, write a lininterpolation function
+def vectorize_min(list1, list2):
+    for i in range(len(list1)):
+        if list1[i] == None:
+            list1[i] = pos_inf
+        if list2[i] == None:
+            list2[i] = pos_inf
+            
+    return [min(list1[i], list2[i]) for i in range(len(list1))]
+
+def vectorize_sum(list1, list2):
+    for i in range(len(list1)):
+        if list1[i] == None:
+            list1[i] = 0
+        if list2[i] == None:
+            list2[i] = 0
+            
+    return [list1[i] + list2[i] for i in range(len(list1))]
+
+def vectorize(fun, list):
+    return [fun(x) for x in list]
 
 def lininterpolation(x, x0, x1, y0, y1):
     return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+
+def normalize_probabilities(probs):
+    total = sum(probs)
+    if total == 0:
+        raise ValueError("Sum of probabilities is zero; cannot normalize.")
+    return [p / total for p in probs]
+
+def shade(house_type):
+    if house_type == "house1":
+        return 10
+    elif house_type == "house2":
+        return 5
+    elif house_type == "house3":
+        return 0
+    elif house_type == "house4":
+        return 0
+
 
 def heat_danger_discrete(heat_index):
     global neg_inf, pos_inf
@@ -55,7 +104,7 @@ def heat_danger_continuous(heat_index):
         return -1
  
  
-def demographic_restorative_coefficient(median_household_income, percent_nonwhite)
+def demographic_restorative_coefficient(median_household_income, percent_nonwhite):
     inc_part = 20_000 / min(median_household_income, 20_000)
     race_part = 1 - percent_nonwhite
     return inc_part + race_part
@@ -64,16 +113,23 @@ def demographic_restorative_coefficient(median_household_income, percent_nonwhit
 def age_risk(percent_household_over_65, percent_household_under_18):
     pass
 
-def sample_age_category(pct_over_80, pct_between_65_80, pct_between_65_16, pct_below_16): #Last percent is below 65 so that's obvious
+def sample_age_category(probabilities, ranges): #Last percent is below 65 so that's obvious
     val = random()
-    if val < pct_over_80:
-        return "Elderly"
-    elif val < pct_over_80 + pct_between_65_80:
-        return "Retired"
-    elif val < pct_over_80 + pct_between_65_80 + pct_between_65_16:
-        return "Working Adult"
-    else:
-        return "Child"
+    cumprob = 0
+    for i in range(len(probabilities)):
+        if val < cumprob + probabilities[i]:
+            return ranges[i]
+        cumprob += probabilities[i]
+
+def sample_house_size(house_type):
+    if house_type == "house1":
+        return 3
+    elif house_type == "house2":
+        return 3
+    elif house_type == "house3":
+        return 2
+    elif house_type == "house4":
+        return 6
 
 def age_risk(age_category): #How tf do I normalize this??? don't I do proportion to total deaths? but then that reduces the whole thing?? so I have to do proportion to total population?? wait oh this is like chisq counts
     if age_category == "Elderly":
@@ -86,7 +142,9 @@ def age_risk(age_category): #How tf do I normalize this??? don't I do proportion
         return 0.1
 
 def sample_is_working(age_category):
-    # Bayesian Math here
+    to_string_indices <- c('Under.5', 'X.5...9', 'X.10...14', 'X15.19', 'X20.24', 'X25.29', 'X30.34', 'X35.39', 'X40.44', 'X45.49', 'X50.54', 'X55.59', 'X60.64', 'X65.69', 'X70.74', 'X75.79', 'X80.84', 'X85.Plus')
+    
+    pass
     
 
 def sample_commute_type(wfh_pct, public_pct, car_pct = None):
@@ -111,8 +169,14 @@ def car_hd_mask(has_car):
         return None
 
 def temp_mask_by_commute_type(commute_type):
+    #Hour 0 to 23:
+    if commute_type == "no_work":
+        return [
+            None, None, None, None, None, None, None, None,
+            None, None, None, None, None, None, None, None,
+            None, None, None, None, None, None, None, None
+            ]
     if commute_type == "wfh":
-        #Hour 0 to 23:
         return [None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None]
@@ -125,18 +189,43 @@ def temp_mask_by_commute_type(commute_type):
                 70,   70,   70,   70,   70,   70,   70,   70,
                 70,   70,   None, None, None, None, None, None]
 
-def shade_temp_amount():
-    pass
+def shade_temp_amount(house_type):
+    if house_type == "house1":
+        return 
+    elif house_type == "house2":
+        return 
+    elif house_type == "house3":
+        return 
+    elif house_type == "house4":
+        return 
+    
+def inside_temp_data(house_type):
+    return house_type_temps_over_24h[house_type]
 
-def solve_PHOV():
-    pass
+def schedule_temp_data_by_person(commute_type, inside_temp_data):
+    return vectorize_min(inside_temp_data, temp_mask_by_commute_type(commute_type=commute_type))
+
+def sample_house_type(house_1_pct, house_2_pct, house_3_pct, house_4_pct):
+    # We estimate these percentages from the provided data of number of apartments, houses, townhouses, and other.
+    # We only sample from the four typical dwellings listed in the data.
+    val = random()
+    if val < house_1_pct:
+        return "house1"
+    elif val < house_1_pct + house_2_pct:
+        return "house2"
+    elif val < house_1_pct + house_2_pct + house_3_pct:
+        return "house3"
+    else:
+        return "house4"
+
 
 def sample_family_size(house_type):
     pass
 
-def sample_k():
-    pass
-
+    
+def integral_of_HOV(hov_over_time):
+    timescount = len(hov_over_time) #Supposed to be 24
+    return sum([hov_over_time for i in range(timescount)]) / timescount
 
 
    

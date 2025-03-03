@@ -7,6 +7,7 @@ dwellings = read.csv("./lib/competition/MemphisDwellings.csv")
 
 #Merge the data by the common row field
 df = merge(population, travel, by = "ZIP.code")
+df = merge(df, dwellings, by = "ZIP.code")
 
 #Print all column names 
 print(colnames(df))
@@ -26,9 +27,22 @@ df$proportion_vehicle <- df$Households.with.1..vehicles.x / df$Number.of.househo
 #proportion of those who work (over age 16 and work)
 df$proportion_work <- df$Population.age.16..years.old.who.work / df$Population
 
-#proportion of those who work from home if they work
+#proportion of each work commute type
 df$proportion_wfh <- df$Primary.mode.of.transportation.to.work..persons.aged.16.years....other.and.work.from.home / df$Population.age.16..years.old.who.work
+df$proportion_public <- df$Primary.mode.of.transportation.to.work..persons.aged.16.years....walking.or.public.transit / df$Population.age.16..years.old.who.work
+df$proportion_drive <- df$Primary.mode.of.transportation.to.work..persons.aged.16.years....driving / df$Population.age.16..years.old.who.work
 
-
+#proportion of each household type
+df$considered_households <- df$Detached.whole.house + df$Apartments
+df$house1_proportion <- df$Detached.whole.house / df$considered_households / 2
+df$house2_proportion <- df$Apartments / df$considered_households / 2
+df$house3_proportion <- df$Apartments / df$considered_households / 2
+df$house4_proportion <- df$Detached.whole.house / df$considered_households / 2
 ```
 
+
+```{r export}
+
+write.csv(df, "./lib/competition/MemphisData.csv")
+
+```

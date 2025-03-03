@@ -1,0 +1,23 @@
+```{r setup}
+library(car)
+
+```
+
+```{r}
+print(getwd())
+memphis_pop <- read.csv("./lib/data-analysis/good_data/memphis_pop.csv")
+electricity_data <- read.csv("./lib/data-analysis/good_data/tn_electricity.csv")
+range_temp_data <- read.csv("./lib/data-analysis/good_data/range_temp_data.csv")
+
+df = merge(memphis_pop, electricity_data, by = "Year")
+df = merge(df, range_temp_data, by = "Year")
+
+```
+
+```{r multiple_regression}
+
+model <- lm(Total.Sales.MwH ~ Population + Year + Year.Avg, data = df)
+
+summary(model)
+crPlots(model)
+```

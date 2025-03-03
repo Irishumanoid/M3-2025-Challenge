@@ -1,12 +1,86 @@
 ```{r import}
+library(readr)
+library(ohenery)
 df = read.csv("./lib/competition/ZipCodePopAgeBreakdown.csv")
 print(colnames(df))
+memphis_data = read.csv("./lib/competition/MemphisData.csv")
+df = merge(df, memphis_data, by.x = "ZIP", by.y = "ZIP.code")
+```
+
+
+```{r data_cleaning}
+to_string_indices <- c('Under.5', 'X.5...9', 'X.10...14', 'X15.19', 'X20.24', 'X25.29', 'X30.34', 'X35.39', 'X40.44', 'X45.49', 'X50.54', 'X55.59', 'X60.64', 'X65.69', 'X70.74', 'X75.79', 'X80.84', 'X85.Plus')
+p_given_working_multiplier<- c(  0,   0,         0,           0.6,      1,        1,        1,         1,     1,           1,        1,       1,        1,        0,      0,         0,         0,          0 )                                                 
+for (col in to_string_indices) {
+    df[col] <- as.numeric(gsub("[^0-9.-]", "", df[,col]))
+}
 ```
 
 ```{r calculated_fields}
-df$total_population <- df$Under.5 + df$X.5...9 + df$X.10...14 + df$X15.19 + df$X20.24 + df$X25.29 + df$X30.34 + df$X35.39 + df$X40.44 + df$X45.49 + df$X50.54 + df$X55.59 + df$X60.64 + df$X65.69 + df$X70.74 + df$X75.79 + df$X80.84 + df$X85.Plus
+df$total_population <- (df$Under.5 + 
+                        df$X.5...9 + 
+                        df$X.10...14 + 
+                        df$X15.19 + 
+                        df$X20.24 + 
+                        df$X25.29 + 
+                        df$X30.34 + 
+                        df$X35.39 + 
+                        df$X40.44 + 
+                        df$X45.49 + 
+                        df$X50.54 + 
+                        df$X55.59 + 
+                        df$X60.64 + 
+                        df$X65.69 + 
+                        df$X70.74 + 
+                        df$X75.79 + 
+                        df$X80.84 + 
+                        df$X85.Plus
+            )
 df$proportion_between_65_80 <- (df$X65.69 + df$X70.74 + df$X75.79)/df$total_population
 df$proportion_over_80 <- (df$X80.84 + df$X85.Plus)/df$total_population
-df$proportion_under_14 <- (df$Under.5 + df$X.5...9 + df$X.10...14)/df$total_population
-df$proportion_working_age <- (df$X15.19 + df$X20.24 + df$X25.29 + df$X30.34 + df$X35.39 + df$X40.44 + df$X45.49 + df$X50.54 + df$X55.59 + df$X60.64)/df$total_population
+#df$proportion_under_14 <- (df$Under.5 + df$X.5...9 + df$X.10...14)/df$total_population
+#df$proportion_working_age <- (df$X15.19 + df$X20.24 + df$X25.29 + df$X30.34 + df$X35.39 + df$X40.44 + df$X45.49 + df$X50.54 + df$X55.59 + df$X60.64)/df$total_population
+```
+
+```{r bayesian_agebin_working_probabilities}
+
+for (i in 1:length(to_string_indices)) {
+    name_field = paste("p_working_for_age_", to_string_indices[i], sep="")
+    PAgeBin <- df[,to_string_indices[i]]/df$total_population 
+    print("PAgeBin")
+    print(PAgeBin)
+
+    #Multiply each value in each row by the corresponding value in the p_given_working_multiplier
+    #p_given_working_multiplier is one-dimensional horizontal whereas PAgeBin is vertical
+    print("p_given_working_multiplier")
+    print(p_given_working_multiplier[i])
+    PAgeBinGivenWorkingUnnormalized <- PAgeBin * p_given_working_multiplier[i]
+    print("PAgeBinGivenWorkingUnnormalized")
+    print(PAgeBinGivenWorkingUnnormalized)
+    
+    normsum <- sum(PAgeBinGivenWorkingUnnormalized)
+    if (normsum==0){
+        normsum <- 1
+    }
+    PAgeBinGivenWorking <- PAgeBinGivenWorkingUnnormalized / normsum
+    print("PAgeBinGivenWorking")
+    print(PAgeBinGivenWorking)
+
+    PWorking = df$proportion_work
+
+    PWorkingGivenAgeBin <- PAgeBinGivenWorking * PWorking / PAgeBin
+    print("PWorkingGivenAgeBin")
+    print(PWorkingGivenAgeBin)
+    df[, name_field] <- PWorkingGivenAgeBin
+}
+```
+
+```{r bayesian_house_carhaving_probabilities}
+
+```
+
+```{r export}
+
+write.csv(df, "./lib/competition/ZipCodePopAgeBreakdown.csv")
+
 ```
